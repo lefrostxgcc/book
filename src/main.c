@@ -1,5 +1,7 @@
 #include <gtk/gtk.h>
 
+#define	MAIN_WINDOW_TITLE	"Книжка оценок"
+
 static GtkWidget *create_main_window(void);
 
 int main(int argc, char *argv[])
@@ -22,6 +24,7 @@ static GtkWidget *create_main_window(void)
 	GtkWidget	*window;
 
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+	gtk_window_set_title(GTK_WINDOW(window), MAIN_WINDOW_TITLE);
 
 	return window;
 }
