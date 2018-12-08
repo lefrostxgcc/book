@@ -59,5 +59,27 @@ static GtkWidget *create_pupil_list_page(void)
 
 static GtkWidget *create_text_view_subject_list(void)
 {
-	return gtk_text_view_new();
+	const char			*headers[] = {"ID", "Предмет"};
+	GtkListStore		*store_subject_list;
+	GtkWidget			*tree_view;
+	GtkTreeViewColumn	*column;
+	GtkCellRenderer		*render;
+
+	store_subject_list = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_STRING);
+	tree_view = gtk_tree_view_new();
+	gtk_tree_view_set_grid_lines(GTK_TREE_VIEW(tree_view),
+		GTK_TREE_VIEW_GRID_LINES_BOTH);
+	gtk_tree_view_set_model(GTK_TREE_VIEW(tree_view),
+		GTK_TREE_MODEL(store_subject_list));
+	for (int i = 0; i < sizeof headers / sizeof headers[0]; i++)
+	{
+		render = gtk_cell_renderer_text_new();
+		column = gtk_tree_view_column_new_with_attributes(headers[i],
+			render, "text", i, NULL);
+		gtk_tree_view_column_set_resizable(column, TRUE);
+		gtk_tree_view_column_set_min_width(column, 100);
+		gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view), column);
+	}
+
+	return tree_view;
 }
