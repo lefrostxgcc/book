@@ -46,10 +46,22 @@ static GtkWidget *create_main_window(void)
 
 static GtkWidget *create_subject_list_page(void)
 {
-	GtkWidget	*text_view_subject_list;
+	GtkWidget	*hbox;
+	GtkWidget	*vbox;
 
-	text_view_subject_list = create_text_view_subject_list();
-	return text_view_subject_list;
+	hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
+	vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
+
+	gtk_box_pack_start(GTK_BOX(vbox), gtk_label_new("Название предмета"),
+		FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(vbox), gtk_entry_new(), FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(vbox), gtk_button_new_with_label("Сохранить"),
+		FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(hbox), create_text_view_subject_list(),
+		TRUE, TRUE, 0);
+	gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 0);
+
+	return hbox;
 }
 
 static GtkWidget *create_pupil_list_page(void)
