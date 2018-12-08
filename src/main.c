@@ -46,20 +46,35 @@ static GtkWidget *create_main_window(void)
 
 static GtkWidget *create_subject_list_page(void)
 {
+	GtkWidget	*frame;
+	GtkWidget	*frame_tree_view;
+	GtkWidget	*frame_controls;
 	GtkWidget	*hbox;
 	GtkWidget	*vbox;
 
-	hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
-	vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
+	frame_tree_view = gtk_frame_new(NULL);
+	frame_controls = gtk_frame_new(NULL);
 
-	gtk_box_pack_start(GTK_BOX(vbox), gtk_label_new("Название предмета"),
+	gtk_container_set_border_width(GTK_CONTAINER(frame_tree_view), 5);
+	gtk_container_set_border_width(GTK_CONTAINER(frame_controls), 5);
+	
+	hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
+	vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
+
+	gtk_container_set_border_width(GTK_CONTAINER(vbox), 5);
+
+	gtk_box_pack_start(GTK_BOX(vbox), gtk_label_new("Название предмета:"),
 		FALSE, FALSE, 0);
 	gtk_box_pack_start(GTK_BOX(vbox), gtk_entry_new(), FALSE, FALSE, 0);
 	gtk_box_pack_start(GTK_BOX(vbox), gtk_button_new_with_label("Сохранить"),
 		FALSE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(hbox), create_text_view_subject_list(),
-		TRUE, TRUE, 0);
-	gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 0);
+
+	gtk_container_add(GTK_CONTAINER(frame_tree_view),
+		create_text_view_subject_list());
+	gtk_container_add(GTK_CONTAINER(frame_controls), vbox);
+
+	gtk_box_pack_start(GTK_BOX(hbox), frame_tree_view, TRUE, TRUE, 0);
+	gtk_box_pack_start(GTK_BOX(hbox), frame_controls, FALSE, FALSE, 0);
 
 	return hbox;
 }
