@@ -22,9 +22,21 @@ int main(int argc, char *argv[])
 static GtkWidget *create_main_window(void)
 {
 	GtkWidget	*window;
+	GtkWidget	*notebook;
 
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_window_set_title(GTK_WINDOW(window), MAIN_WINDOW_TITLE);
+
+	notebook = gtk_notebook_new();
+	gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
+		gtk_label_new("Вкладка с предметами"),
+		gtk_label_new("Список предметов"));
+
+	gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
+		gtk_label_new("Вкладка с учениками"),
+		gtk_label_new("Список учеников"));
+
+	gtk_container_add(GTK_CONTAINER(window), notebook);
 
 	return window;
 }
