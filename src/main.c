@@ -4,6 +4,7 @@
 
 static GtkWidget *create_main_window(void);
 static GtkWidget *create_subject_list_page(void);
+static GtkWidget *create_pupil_list_page(void);
 
 int main(int argc, char *argv[])
 {
@@ -34,7 +35,7 @@ static GtkWidget *create_main_window(void)
 		gtk_label_new("Список предметов"));
 
 	gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
-		gtk_label_new("Вкладка с учениками"),
+		create_pupil_list_page(),
 		gtk_label_new("Список учеников"));
 
 	gtk_container_add(GTK_CONTAINER(window), notebook);
@@ -45,4 +46,9 @@ static GtkWidget *create_main_window(void)
 static GtkWidget *create_subject_list_page(void)
 {
 	return gtk_label_new("Вкладка с предметами");
+}
+
+static GtkWidget *create_pupil_list_page(void)
+{
+	return gtk_label_new("Вкладка с учениками");
 }
