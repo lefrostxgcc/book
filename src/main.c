@@ -3,6 +3,7 @@
 #define	MAIN_WINDOW_TITLE	"Книжка оценок"
 
 static GtkWidget *create_main_window(void);
+static GtkWidget *create_subject_list_page(void);
 
 int main(int argc, char *argv[])
 {
@@ -29,7 +30,7 @@ static GtkWidget *create_main_window(void)
 
 	notebook = gtk_notebook_new();
 	gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
-		gtk_label_new("Вкладка с предметами"),
+		create_subject_list_page(),
 		gtk_label_new("Список предметов"));
 
 	gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
@@ -39,4 +40,9 @@ static GtkWidget *create_main_window(void)
 	gtk_container_add(GTK_CONTAINER(window), notebook);
 
 	return window;
+}
+
+static GtkWidget *create_subject_list_page(void)
+{
+	return gtk_label_new("Вкладка с предметами");
 }
