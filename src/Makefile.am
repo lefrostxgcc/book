@@ -1,2 +1,4 @@
 bin_PROGRAMS = book
 book_SOURCES=main.c
+book_CPPFLAGS=@PKGGTK_CFLAGS@ $(AM_CPPFLAGS)
+book_LDADD=@PKGGTK_LIBS@
