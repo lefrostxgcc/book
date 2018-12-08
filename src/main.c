@@ -5,6 +5,7 @@
 static GtkWidget *create_main_window(void);
 static GtkWidget *create_subject_list_page(void);
 static GtkWidget *create_pupil_list_page(void);
+static GtkWidget *create_text_view_subject_list(void);
 
 int main(int argc, char *argv[])
 {
@@ -45,10 +46,18 @@ static GtkWidget *create_main_window(void)
 
 static GtkWidget *create_subject_list_page(void)
 {
-	return gtk_label_new("Вкладка с предметами");
+	GtkWidget	*text_view_subject_list;
+
+	text_view_subject_list = create_text_view_subject_list();
+	return text_view_subject_list;
 }
 
 static GtkWidget *create_pupil_list_page(void)
 {
 	return gtk_label_new("Вкладка с учениками");
+}
+
+static GtkWidget *create_text_view_subject_list(void)
+{
+	return gtk_text_view_new();
 }
