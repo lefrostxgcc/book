@@ -2,10 +2,12 @@
 
 #define	MAIN_WINDOW_TITLE	"Книжка оценок"
 
-static GtkWidget *create_main_window(void);
-static GtkWidget *create_subject_list_page(void);
-static GtkWidget *create_pupil_list_page(void);
-static GtkWidget *create_text_view_subject_list(void);
+static GtkWidget	*create_main_window(void);
+static GtkWidget	*create_subject_list_page(void);
+static GtkWidget	*create_pupil_list_page(void);
+static GtkWidget	*create_text_view_subject_list(void);
+static void
+on_button_save_subject_clicked(GtkWidget *button, gpointer data);
 
 int main(int argc, char *argv[])
 {
@@ -51,6 +53,9 @@ static GtkWidget *create_subject_list_page(void)
 	GtkWidget	*frame_controls;
 	GtkWidget	*hbox;
 	GtkWidget	*vbox;
+	GtkWidget	*button_save_subject;
+
+	button_save_subject = gtk_button_new_with_label("Сохранить");
 
 	frame_tree_view = gtk_frame_new(NULL);
 	frame_controls = gtk_frame_new(NULL);
@@ -66,7 +71,7 @@ static GtkWidget *create_subject_list_page(void)
 	gtk_box_pack_start(GTK_BOX(vbox), gtk_label_new("Название предмета:"),
 		FALSE, FALSE, 0);
 	gtk_box_pack_start(GTK_BOX(vbox), gtk_entry_new(), FALSE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(vbox), gtk_button_new_with_label("Сохранить"),
+	gtk_box_pack_start(GTK_BOX(vbox), button_save_subject,
 		FALSE, FALSE, 0);
 
 	gtk_container_add(GTK_CONTAINER(frame_tree_view),
@@ -75,6 +80,10 @@ static GtkWidget *create_subject_list_page(void)
 
 	gtk_box_pack_start(GTK_BOX(hbox), frame_tree_view, TRUE, TRUE, 0);
 	gtk_box_pack_start(GTK_BOX(hbox), frame_controls, FALSE, FALSE, 0);
+
+	g_signal_connect(G_OBJECT(button_save_subject), "clicked",
+						G_CALLBACK(on_button_save_subject_clicked),
+						NULL);
 
 	return hbox;
 }
@@ -109,4 +118,10 @@ static GtkWidget *create_text_view_subject_list(void)
 	}
 
 	return tree_view;
+}
+
+static void
+on_button_save_subject_clicked(GtkWidget *button, gpointer data)
+{
+	g_message("Button save clicked");
 }
