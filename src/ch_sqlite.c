@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stdlib.h>
 #include <sqlite3.h>
 #include <ch_sqlite.h>
 
@@ -19,15 +20,21 @@ ch_sqlite_open(const char *filename, struct ch_sqlite_connection **connection)
 		sqlite3_close(db);
 		return CH_SQLITE_FAIL;
 	}
+	*connection = (struct ch_sqlite_connection *)
+		malloc(sizeof(struct ch_sqlite_connection));
 	(*connection)->db = db;
 	return CH_SQLITE_OK;
 }
 
 enum ch_sqlite_status
-ch_sqlite_close(struct ch_sqlite_connection *connection)
+ch_sqlite_close(struct ch_sqlite_connection **connection)
 {
-	return sqlite3_close(connection->db) == SQLITE_OK ?
-		CH_SQLITE_OK : CH_SQLITE_FAIL;
+	if (sqlite3_close((*connection)->db) != SQLITE_OK)
+		return CH_SQLITE_FAIL;
+
+	free(*connection);
+	*connection = NULL;
+	return CH_SQLITE_OK;
 }
 
 enum ch_sqlite_status

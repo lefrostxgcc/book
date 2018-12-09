@@ -8,7 +8,7 @@ enum ch_sqlite_status
 ch_sqlite_open(const char *filename, struct ch_sqlite_connection **connection);
 
 enum ch_sqlite_status
-ch_sqlite_close(struct ch_sqlite_connection *connection);
+ch_sqlite_close(struct ch_sqlite_connection **connection);
 
 enum ch_sqlite_status
 ch_sqlite_exec(
