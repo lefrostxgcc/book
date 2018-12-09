@@ -1,5 +1,6 @@
 #include <gtk/gtk.h>
 #include <config.h>
+#include <ch_sqlite.h>
 
 #define		MAIN_WINDOW_TITLE	"Книжка оценок"
 #define		DATABASE_FILENAME	(DATA_PATH "/" DATABASE_NAME)
@@ -127,7 +128,19 @@ static GtkWidget *create_text_view_subject_list(void)
 static void
 on_button_save_subject_clicked(GtkWidget *button, gpointer data)
 {
-	show_message_box(DATABASE_FILENAME);
+	char						*message;
+	struct ch_sqlite_connection *connection;
+
+	if (ch_sqlite_open(DATABASE_FILENAME, &connection) != CH_SQLITE_OK)
+	{
+		message = g_strdup_printf("Cannot connect to %s", DATABASE_FILENAME);
+		show_message_box(message);
+		g_free(message);
+		return;
+	}
+
+	if (ch_sqlite_close(&connection) != CH_SQLITE_OK)
+		show_message_box(ch_sqlite_errormsg(connection));
 }
 
 static void show_message_box(const char *message)
