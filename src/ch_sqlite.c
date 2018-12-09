@@ -56,7 +56,7 @@ enum ch_sqlite_status
 ch_sqlite_scalar(
 	struct ch_sqlite_connection *connection,
 	const char *query,
-	char **result,
+	char *result,
 	int result_size)
 {
 	sqlite3_stmt	*res;
@@ -70,11 +70,9 @@ ch_sqlite_scalar(
 
 	step = sqlite3_step(res);
 	if (step == SQLITE_ROW)
-		strncpy(*result, sqlite3_column_text(res, 0), result_size);
-	else
-		*result = NULL;
+		strncpy(result, sqlite3_column_text(res, 0), result_size);
 	sqlite3_finalize(res);
-	return *result ? CH_SQLITE_OK : CH_SQLITE_FAIL;
+	return result ? CH_SQLITE_OK : CH_SQLITE_FAIL;
 }
 
 const char *

@@ -21,7 +21,7 @@ enum ch_sqlite_status
 ch_sqlite_scalar(
 	struct ch_sqlite_connection *connection,
 	const char *query,
-	char **result,
+	char *result,
 	int result_size);
 
 const char *
