@@ -144,6 +144,14 @@ on_button_save_subject_clicked(GtkWidget *button, gpointer data)
 		return;
 	}
 
+	query = "INSERT INTO subject (id, subject) VALUES (4, 'Английский язык');";
+	if (ch_sqlite_exec(connection, query, NULL, NULL) != CH_SQLITE_OK)
+	{
+		show_message_box(ch_sqlite_errormsg(connection));
+		ch_sqlite_close(&connection);
+		return;
+	}
+
 	query = "SELECT COUNT(*) FROM subject;";
 	if (ch_sqlite_scalar(connection, query, result, sizeof result) !=
 		CH_SQLITE_OK)
