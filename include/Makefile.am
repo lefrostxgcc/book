@@ -1,1 +1,2 @@
-EXTRA_DIST=book_sqlite.h
+EXTRA_DIST=ch_sqlite.h
+
