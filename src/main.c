@@ -1,6 +1,8 @@
 #include <gtk/gtk.h>
+#include <config.h>
 
-#define	MAIN_WINDOW_TITLE	"Книжка оценок"
+#define		MAIN_WINDOW_TITLE	"Книжка оценок"
+#define		DATABASE_FILENAME	(DATA_PATH "/" DATABASE_NAME)
 
 static GtkWidget	*create_main_window(void);
 static GtkWidget	*create_subject_list_page(void);
@@ -125,7 +127,7 @@ static GtkWidget *create_text_view_subject_list(void)
 static void
 on_button_save_subject_clicked(GtkWidget *button, gpointer data)
 {
-	show_message_box("Button save clicked");
+	show_message_box(DATABASE_FILENAME);
 }
 
 static void show_message_box(const char *message)

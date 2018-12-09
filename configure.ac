@@ -21,6 +21,8 @@ PKG_CHECK_MODULES([SQLITE3], [sqlite3])
 
 # Checks for library functions.
 
+AC_DEFINE(DATABASE_NAME, "pointbook.db", [database name])
+
 AC_CONFIG_FILES([Makefile
 				include/Makefile
 				data/Makefile
