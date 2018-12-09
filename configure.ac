@@ -13,6 +13,7 @@ AC_PROG_CC
 
 # Checks for libraries.
 PKG_CHECK_MODULES([PKGGTK], [gtk+-3.0])
+PKG_CHECK_MODULES([SQLITE3], [sqlite3])
 
 # Checks for header files.
 
@@ -21,6 +22,6 @@ PKG_CHECK_MODULES([PKGGTK], [gtk+-3.0])
 # Checks for library functions.
 
 AC_CONFIG_FILES([Makefile
-				 data/Makefile
-                 src/Makefile])
+				data/Makefile
+				src/Makefile])
 AC_OUTPUT
