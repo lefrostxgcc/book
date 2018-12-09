@@ -21,5 +21,6 @@ PKG_CHECK_MODULES([PKGGTK], [gtk+-3.0])
 # Checks for library functions.
 
 AC_CONFIG_FILES([Makefile
+				 data/Makefile
                  src/Makefile])
 AC_OUTPUT
