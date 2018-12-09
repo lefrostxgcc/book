@@ -17,6 +17,7 @@ ch_sqlite_open(const char *filename, struct ch_sqlite_connection **connection)
 	rc = sqlite3_open(filename, &db);
 	if (rc != SQLITE_OK)
 	{
+		*connection = NULL;
 		sqlite3_close(db);
 		return CH_SQLITE_FAIL;
 	}
