@@ -6,13 +6,14 @@ static GtkWidget	*create_main_window(void);
 static GtkWidget	*create_subject_list_page(void);
 static GtkWidget	*create_pupil_list_page(void);
 static GtkWidget	*create_text_view_subject_list(void);
+static void			show_message_box(const char *message);
 static void
 on_button_save_subject_clicked(GtkWidget *button, gpointer data);
 
+static GtkWidget	*window;
+
 int main(int argc, char *argv[])
 {
-	GtkWidget	*window;
-
 	gtk_init(&argc, &argv);
 
 	window = create_main_window();
@@ -26,11 +27,12 @@ int main(int argc, char *argv[])
 
 static GtkWidget *create_main_window(void)
 {
-	GtkWidget	*window;
+	GtkWidget	*win;
+
 	GtkWidget	*notebook;
 
-	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-	gtk_window_set_title(GTK_WINDOW(window), MAIN_WINDOW_TITLE);
+	win = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+	gtk_window_set_title(GTK_WINDOW(win), MAIN_WINDOW_TITLE);
 
 	notebook = gtk_notebook_new();
 	gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
@@ -41,9 +43,9 @@ static GtkWidget *create_main_window(void)
 		create_pupil_list_page(),
 		gtk_label_new("Список учеников"));
 
-	gtk_container_add(GTK_CONTAINER(window), notebook);
+	gtk_container_add(GTK_CONTAINER(win), notebook);
 
-	return window;
+	return win;
 }
 
 static GtkWidget *create_subject_list_page(void)
@@ -123,5 +125,18 @@ static GtkWidget *create_text_view_subject_list(void)
 static void
 on_button_save_subject_clicked(GtkWidget *button, gpointer data)
 {
-	g_message("Button save clicked");
+	show_message_box("Button save clicked");
+}
+
+static void show_message_box(const char *message)
+{
+	GtkWidget *dialog;
+
+	dialog = gtk_message_dialog_new(GTK_WINDOW(window), GTK_DIALOG_MODAL,
+									GTK_MESSAGE_INFO, GTK_BUTTONS_OK,
+									message);
+
+	gtk_window_set_title(GTK_WINDOW(dialog), MAIN_WINDOW_TITLE);
+	gtk_dialog_run(GTK_DIALOG(dialog));
+	gtk_widget_destroy(dialog);
 }
