@@ -8,7 +8,7 @@ struct ch_sqlite_connection
 };
 
 enum ch_sqlite_status
-ch_sqlite_open(const char *filename, struct ch_sqlite_connection *connection)
+ch_sqlite_open(const char *filename, struct ch_sqlite_connection **connection)
 {
 	sqlite3		*db;
 	int			rc;
@@ -19,7 +19,7 @@ ch_sqlite_open(const char *filename, struct ch_sqlite_connection *connection)
 		sqlite3_close(db);
 		return CH_SQLITE_FAIL;
 	}
-	connection->db = db;
+	(*connection)->db = db;
 	return CH_SQLITE_OK;
 }
 
