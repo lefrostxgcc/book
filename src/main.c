@@ -128,7 +128,9 @@ static GtkWidget *create_text_view_subject_list(void)
 static void
 on_button_save_subject_clicked(GtkWidget *button, gpointer data)
 {
+	char						result[20];
 	char						*message;
+	const char					*query;
 	struct ch_sqlite_connection *connection;
 
 	if (ch_sqlite_open(DATABASE_FILENAME, &connection) != CH_SQLITE_OK)
@@ -139,8 +141,18 @@ on_button_save_subject_clicked(GtkWidget *button, gpointer data)
 		return;
 	}
 
-	if (ch_sqlite_close(&connection) != CH_SQLITE_OK)
+	query = "SELECT COUNT(*) FROM subject;";
+	if (ch_sqlite_scalar(connection, query, result, sizeof result) !=
+		CH_SQLITE_OK)
+	{
 		show_message_box(ch_sqlite_errormsg(connection));
+		ch_sqlite_close(&connection);
+		return;
+	}
+
+	show_message_box(result);
+
+	ch_sqlite_close(&connection);
 }
 
 static void show_message_box(const char *message)
