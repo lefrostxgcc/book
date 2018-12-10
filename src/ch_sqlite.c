@@ -45,8 +45,7 @@ ch_sqlite_close(struct ch_sqlite_connection **connection)
 	if (sqlite3_close((*connection)->db) != SQLITE_OK)
 		return CH_SQLITE_FAIL;
 
-	free((*connection)->last_query);
-	free((*connection)->last_error);
+	free_last_query_and_error(*connection);
 	free(*connection);
 	*connection = NULL;
 	return CH_SQLITE_OK;
