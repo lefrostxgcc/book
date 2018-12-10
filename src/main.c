@@ -11,7 +11,8 @@ static GtkWidget		*create_main_window(void);
 static GtkWidget		*create_subject_list_page(void);
 static GtkWidget		*create_pupil_list_page(void);
 static GtkWidget		*create_text_view_subject_list(void);
-static enum msgbox_responce	show_message_box(const char *message);
+static void				show_message_box(const char *message);
+static enum msgbox_responce	show_error_message_box(const char *message);
 static void
 on_button_save_subject_clicked(GtkWidget *button, gpointer data);
 static int db_error(struct ch_sqlite_connection *connection);
@@ -143,8 +144,6 @@ on_button_save_subject_clicked(GtkWidget *button, gpointer data)
 	do ch_sqlite_exec(connection, query, NULL, NULL);
 	while (db_error(connection));
 
-	show_message_box(result);
-
 	do ch_sqlite_close(&connection);
 	while (db_error(connection));
 }
@@ -158,7 +157,7 @@ static int db_error(struct ch_sqlite_connection *connection)
 		return 0;
 	message = g_strdup_printf("%s\n%s",
 		ch_sqlite_last_error(connection), ch_sqlite_last_query(connection));
-	responce = show_message_box(message);
+	responce = show_error_message_box(message);
 	g_free(message);
 	switch (responce)
 	{
@@ -169,7 +168,7 @@ static int db_error(struct ch_sqlite_connection *connection)
 	return 0;
 }
 
-static enum msgbox_responce show_message_box(const char *message)
+static enum msgbox_responce show_error_message_box(const char *message)
 {
 	GtkWidget				*dialog;
 	GtkWidget				*content_area;
@@ -198,4 +197,17 @@ static enum msgbox_responce show_message_box(const char *message)
 	responce = gtk_dialog_run(GTK_DIALOG(dialog));
 	gtk_widget_destroy(dialog);
 	return responce;
+}
+
+static void show_message_box(const char *message)
+{
+	GtkWidget *dialog;
+
+	dialog = gtk_message_dialog_new(GTK_WINDOW(window), GTK_DIALOG_MODAL,
+									GTK_MESSAGE_INFO, GTK_BUTTONS_OK,
+									message);
+
+	gtk_window_set_title(GTK_WINDOW(dialog), MAIN_WINDOW_TITLE);
+	gtk_dialog_run(GTK_DIALOG(dialog));
+	gtk_widget_destroy(dialog);
 }
