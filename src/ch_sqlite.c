@@ -24,18 +24,16 @@ ch_sqlite_open(const char *filename, struct ch_sqlite_connection **connection)
 	sqlite3		*db;
 	int			rc;
 
+	*connection = (struct ch_sqlite_connection *)
+		calloc(1, sizeof(struct ch_sqlite_connection));
+	free_last_query_and_error(*connection);
 	rc = sqlite3_open(filename, &db);
 	if (rc != SQLITE_OK)
 	{
-		*connection = NULL;
-		sqlite3_close(db);
+		(*connection)->last_error = strdup(ch_sqlite_errormsg(*connection));
 		return CH_SQLITE_FAIL;
 	}
-	*connection = (struct ch_sqlite_connection *)
-		malloc(sizeof(struct ch_sqlite_connection));
 	(*connection)->db = db;
-	(*connection)->last_query = NULL;
-	(*connection)->last_error = NULL;
 	return CH_SQLITE_OK;
 }
 
