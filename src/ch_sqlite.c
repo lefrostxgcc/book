@@ -83,14 +83,20 @@ ch_sqlite_scalar(
 	int				rc;
 	int				step;
 
+	free_last_query_and_error(connection);
+	connection->last_query = strdup(query);
 	rc = sqlite3_prepare_v2(connection->db, query, -1, &res, 0);
 
 	if (rc != SQLITE_OK)
+	{
+		connection->last_error = strdup(ch_sqlite_errormsg(connection));
 		return CH_SQLITE_FAIL;
+	}
 
 	step = sqlite3_step(res);
 	if (step != SQLITE_ROW)
 	{
+		connection->last_error = strdup(ch_sqlite_errormsg(connection));
 		sqlite3_finalize(res);
 		return CH_SQLITE_FAIL;
 	}
