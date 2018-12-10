@@ -164,6 +164,7 @@ static int db_error(struct ch_sqlite_connection *connection)
 	g_free(message);
 	switch (responce)
 	{
+		case GTK_RESPONSE_DELETE_EVENT:
 		case RESPONCE_ABORT: exit(1); return 0;
 		case RESPONCE_RETRY: return 1;
 		case RESPONCE_IGNORE: return 0;
