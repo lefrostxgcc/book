@@ -8,6 +8,7 @@ struct ch_sqlite_connection
 	sqlite3		*db;
 	char		*last_query;
 	char		*last_error;
+	int			rows_modified;
 };
 
 static void free_last_query_and_error(struct ch_sqlite_connection *conn)
@@ -61,6 +62,7 @@ ch_sqlite_exec(
 	free_last_query_and_error(connection);
 	connection->last_query = strdup(query);
 	rc = sqlite3_exec(connection->db, query, callback, callback_opt_arg, NULL);
+	connection->rows_modified = sqlite3_changes(connection->db);
 	if (rc != SQLITE_OK)
 	{
 		connection->last_error = strdup(ch_sqlite_errormsg(connection));
@@ -119,4 +121,10 @@ const char *
 ch_sqlite_last_error(struct ch_sqlite_connection *connection)
 {
 	return connection->last_error;
+}
+
+int
+ch_sqlite_rows_modified(struct ch_sqlite_connection *connection)
+{
+	return connection->rows_modified;
 }

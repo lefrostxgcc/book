@@ -33,4 +33,7 @@ ch_sqlite_last_query(struct ch_sqlite_connection *connection);
 const char *
 ch_sqlite_last_error(struct ch_sqlite_connection *connection);
 
+int
+ch_sqlite_rows_modified(struct ch_sqlite_connection *connection);
+
 #endif /* CH_SQLITE_H */
