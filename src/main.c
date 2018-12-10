@@ -14,6 +14,7 @@ static GtkWidget		*create_text_view_subject_list(void);
 static enum msgbox_responce	show_message_box(const char *message);
 static void
 on_button_save_subject_clicked(GtkWidget *button, gpointer data);
+static int db_error(struct ch_sqlite_connection *connection);
 
 static GtkWidget	*window;
 
@@ -155,6 +156,26 @@ on_button_save_subject_clicked(GtkWidget *button, gpointer data)
 	show_message_box(result);
 
 	ch_sqlite_close(&connection);
+}
+
+static int db_error(struct ch_sqlite_connection *connection)
+{
+	char					*message;
+	enum msgbox_responce	responce;
+
+	if (ch_sqlite_last_error(connection) == NULL)
+		return 0;
+	message = g_strdup_printf("%s\n%s",
+		ch_sqlite_last_error(connection), ch_sqlite_last_query(connection));
+	responce = show_message_box(message);
+	g_free(message);
+	switch (responce)
+	{
+		case RESPONCE_ABORT: gtk_main_quit(); return 0;
+		case RESPONCE_RETRY: return 1;
+		case RESPONCE_IGNORE: return 0;
+	}
+	return 0;
 }
 
 static enum msgbox_responce show_message_box(const char *message)
