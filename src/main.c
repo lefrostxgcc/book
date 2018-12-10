@@ -144,6 +144,9 @@ on_button_save_subject_clicked(GtkWidget *button, gpointer data)
 	do ch_sqlite_exec(connection, query, NULL, NULL);
 	while (db_error(connection));
 
+	g_snprintf(result, sizeof result, "%d", ch_sqlite_rows_modified(connection));
+	show_message_box(result);
+
 	do ch_sqlite_close(&connection);
 	while (db_error(connection));
 }
