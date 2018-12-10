@@ -10,6 +10,14 @@ struct ch_sqlite_connection
 	char		*last_error;
 };
 
+static void free_last_query_and_error(struct ch_sqlite_connection *conn)
+{
+	free(conn->last_query);
+	free(conn->last_error);
+	conn->last_query = NULL;
+	conn->last_error = NULL;
+}
+
 enum ch_sqlite_status
 ch_sqlite_open(const char *filename, struct ch_sqlite_connection **connection)
 {
