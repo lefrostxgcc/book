@@ -69,10 +69,14 @@ ch_sqlite_scalar(
 		return CH_SQLITE_FAIL;
 
 	step = sqlite3_step(res);
-	if (step == SQLITE_ROW)
-		strncpy(result, sqlite3_column_text(res, 0), result_size);
+	if (step != SQLITE_ROW)
+	{
+		sqlite3_finalize(res);
+		return CH_SQLITE_FAIL;
+	}
+	strncpy(result, sqlite3_column_text(res, 0), result_size);
 	sqlite3_finalize(res);
-	return result ? CH_SQLITE_OK : CH_SQLITE_FAIL;
+	return CH_SQLITE_OK;
 }
 
 const char *
