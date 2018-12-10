@@ -26,10 +26,10 @@ ch_sqlite_open(const char *filename, struct ch_sqlite_connection **connection)
 
 	*connection = (struct ch_sqlite_connection *)
 		calloc(1, sizeof(struct ch_sqlite_connection));
-	free_last_query_and_error(*connection);
-	rc = sqlite3_open(filename, &db);
+	rc = sqlite3_open_v2(filename, &db, SQLITE_OPEN_READWRITE, NULL);
 	if (rc != SQLITE_OK)
 	{
+		sqlite3_close(db);
 		(*connection)->last_error = strdup(ch_sqlite_errormsg(*connection));
 		return CH_SQLITE_FAIL;
 	}
