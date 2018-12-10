@@ -110,3 +110,15 @@ ch_sqlite_errormsg(struct ch_sqlite_connection *connection)
 {
 	return sqlite3_errmsg(connection->db);
 }
+
+const char *
+ch_sqlite_last_query(struct ch_sqlite_connection *connection)
+{
+	return connection->last_query;
+}
+
+const char *
+ch_sqlite_last_error(struct ch_sqlite_connection *connection)
+{
+	return connection->last_error;
+}

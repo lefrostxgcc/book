@@ -27,4 +27,10 @@ ch_sqlite_scalar(
 const char *
 ch_sqlite_errormsg(struct ch_sqlite_connection *connection);
 
+const char *
+ch_sqlite_last_query(struct ch_sqlite_connection *connection);
+
+const char *
+ch_sqlite_last_error(struct ch_sqlite_connection *connection);
+
 #endif /* CH_SQLITE_H */
