@@ -16,6 +16,9 @@ static enum msgbox_responce	show_error_message_box(const char *message);
 static void
 on_button_save_subject_clicked(GtkWidget *button, gpointer data);
 static int db_error(struct ch_sqlite_connection *connection);
+static void load_subject_table(GtkListStore	*store);
+static int add_subject_to_store_cb(void *opt_arg, int col_count,
+	char **cols, char **col_names);
 
 static GtkWidget	*window;
 
@@ -111,6 +114,7 @@ static GtkWidget *create_text_view_subject_list(void)
 	GtkCellRenderer		*render;
 
 	store_subject_list = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_STRING);
+	load_subject_table(store_subject_list);
 	tree_view = gtk_tree_view_new();
 	gtk_tree_view_set_grid_lines(GTK_TREE_VIEW(tree_view),
 		GTK_TREE_VIEW_GRID_LINES_BOTH);
@@ -146,6 +150,23 @@ on_button_save_subject_clicked(GtkWidget *button, gpointer data)
 
 	g_snprintf(result, sizeof result, "%d", ch_sqlite_rows_modified(connection));
 	show_message_box(result);
+
+	do ch_sqlite_close(&connection);
+	while (db_error(connection));
+}
+
+static void load_subject_table(GtkListStore	*store)
+{
+	struct ch_sqlite_connection *connection;
+	const char					*query;
+
+	do ch_sqlite_open(DATABASE_FILENAME, &connection);
+	while (db_error(connection));
+
+	gtk_list_store_clear(store);
+	query = "SELECT id, subject FROM subject ORDER BY subject";
+	do ch_sqlite_exec(connection, query, add_subject_to_store_cb, store);
+	while (db_error(connection));
 
 	do ch_sqlite_close(&connection);
 	while (db_error(connection));
@@ -214,4 +235,14 @@ static void show_message_box(const char *message)
 	gtk_window_set_title(GTK_WINDOW(dialog), MAIN_WINDOW_TITLE);
 	gtk_dialog_run(GTK_DIALOG(dialog));
 	gtk_widget_destroy(dialog);
+}
+
+static int add_subject_to_store_cb(void *store, int col_count,
+	char **cols, char **col_names)
+{
+	GtkTreeIter		iter;
+
+	gtk_list_store_append(GTK_LIST_STORE(store), &iter);
+	gtk_list_store_set(GTK_LIST_STORE(store), &iter, 0, cols[0],
+		1, cols[1], -1);
 }
