@@ -132,38 +132,21 @@ static void
 on_button_save_subject_clicked(GtkWidget *button, gpointer data)
 {
 	char						result[20];
-	char						*message;
 	const char					*query;
 	struct ch_sqlite_connection *connection;
 
-	if (ch_sqlite_open(DATABASE_FILENAME, &connection) != CH_SQLITE_OK)
-	{
-		message = g_strdup_printf("Cannot connect to %s", DATABASE_FILENAME);
-		show_message_box(message);
-		g_free(message);
-		return;
-	}
+	do ch_sqlite_open(DATABASE_FILENAME, &connection);
+	while (db_error(connection));
 
-	query = "INSERT INTO subject (id, subject) VALUES (4, 'Английский язык');";
-	if (ch_sqlite_exec(connection, query, NULL, NULL) != CH_SQLITE_OK)
-	{
-		show_message_box(ch_sqlite_errormsg(connection));
-		ch_sqlite_close(&connection);
-		return;
-	}
+	query = "INSERT INTO subject (id, subject) VALUES (4, 'Английский язык')";
 
-	query = "SELECT COUNT(*) FROM subject;";
-	if (ch_sqlite_scalar(connection, query, result, sizeof result) !=
-		CH_SQLITE_OK)
-	{
-		show_message_box(ch_sqlite_errormsg(connection));
-		ch_sqlite_close(&connection);
-		return;
-	}
+	do ch_sqlite_exec(connection, query, NULL, NULL);
+	while (db_error(connection));
 
 	show_message_box(result);
 
-	ch_sqlite_close(&connection);
+	do ch_sqlite_close(&connection);
+	while (db_error(connection));
 }
 
 static int db_error(struct ch_sqlite_connection *connection)
@@ -171,7 +154,7 @@ static int db_error(struct ch_sqlite_connection *connection)
 	char					*message;
 	enum msgbox_responce	responce;
 
-	if (ch_sqlite_last_error(connection) == NULL)
+	if (connection == NULL || ch_sqlite_last_error(connection) == NULL)
 		return 0;
 	message = g_strdup_printf("%s\n%s",
 		ch_sqlite_last_error(connection), ch_sqlite_last_query(connection));
@@ -179,7 +162,7 @@ static int db_error(struct ch_sqlite_connection *connection)
 	g_free(message);
 	switch (responce)
 	{
-		case RESPONCE_ABORT: gtk_main_quit(); return 0;
+		case RESPONCE_ABORT: exit(1); return 0;
 		case RESPONCE_RETRY: return 1;
 		case RESPONCE_IGNORE: return 0;
 	}
