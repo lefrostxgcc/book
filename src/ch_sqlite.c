@@ -5,7 +5,9 @@
 
 struct ch_sqlite_connection
 {
-	sqlite3 *db;
+	sqlite3		*db;
+	char		*last_query;
+	char		*last_error;
 };
 
 enum ch_sqlite_status
@@ -24,6 +26,8 @@ ch_sqlite_open(const char *filename, struct ch_sqlite_connection **connection)
 	*connection = (struct ch_sqlite_connection *)
 		malloc(sizeof(struct ch_sqlite_connection));
 	(*connection)->db = db;
+	(*connection)->last_query = NULL;
+	(*connection)->last_error = NULL;
 	return CH_SQLITE_OK;
 }
 
@@ -33,6 +37,8 @@ ch_sqlite_close(struct ch_sqlite_connection **connection)
 	if (sqlite3_close((*connection)->db) != SQLITE_OK)
 		return CH_SQLITE_FAIL;
 
+	free((*connection)->last_query);
+	free((*connection)->last_error);
 	free(*connection);
 	*connection = NULL;
 	return CH_SQLITE_OK;
