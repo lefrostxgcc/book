@@ -27,6 +27,7 @@ ch_sqlite_open(const char *filename, struct ch_sqlite_connection **connection)
 
 	*connection = (struct ch_sqlite_connection *)
 		calloc(1, sizeof(struct ch_sqlite_connection));
+	(*connection)->last_query = strdup(filename);
 	rc = sqlite3_open_v2(filename, &db, SQLITE_OPEN_READWRITE, NULL);
 	if (rc != SQLITE_OK)
 	{
