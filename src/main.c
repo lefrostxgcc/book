@@ -5,11 +5,13 @@
 #define		MAIN_WINDOW_TITLE	"Книжка оценок"
 #define		DATABASE_FILENAME	(DATA_PATH "/" DATABASE_NAME)
 
-static GtkWidget	*create_main_window(void);
-static GtkWidget	*create_subject_list_page(void);
-static GtkWidget	*create_pupil_list_page(void);
-static GtkWidget	*create_text_view_subject_list(void);
-static void			show_message_box(const char *message);
+enum msgbox_responce { RESPONCE_ABORT, RESPONCE_RETRY, RESPONCE_IGNORE };
+
+static GtkWidget		*create_main_window(void);
+static GtkWidget		*create_subject_list_page(void);
+static GtkWidget		*create_pupil_list_page(void);
+static GtkWidget		*create_text_view_subject_list(void);
+static enum msgbox_responce	show_message_box(const char *message);
 static void
 on_button_save_subject_clicked(GtkWidget *button, gpointer data);
 
@@ -155,15 +157,33 @@ on_button_save_subject_clicked(GtkWidget *button, gpointer data)
 	ch_sqlite_close(&connection);
 }
 
-static void show_message_box(const char *message)
+static enum msgbox_responce show_message_box(const char *message)
 {
-	GtkWidget *dialog;
+	GtkWidget				*dialog;
+	GtkWidget				*content_area;
+	GtkWidget				*vbox;
+	GtkWidget				*label_message;
+	enum msgbox_responce	responce;
 
-	dialog = gtk_message_dialog_new(GTK_WINDOW(window), GTK_DIALOG_MODAL,
-									GTK_MESSAGE_INFO, GTK_BUTTONS_OK,
-									message);
+	dialog = gtk_dialog_new_with_buttons("Ошибка базы данных",
+		GTK_WINDOW(window), GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
+		"_Abort", RESPONCE_ABORT,
+		"_Retry", RESPONCE_RETRY,
+		"_Ignore", RESPONCE_IGNORE,
+		NULL);
 
-	gtk_window_set_title(GTK_WINDOW(dialog), MAIN_WINDOW_TITLE);
-	gtk_dialog_run(GTK_DIALOG(dialog));
+	gtk_window_set_resizable(GTK_WINDOW(dialog), FALSE);
+	content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
+	vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
+	label_message = gtk_label_new(message);
+
+	gtk_container_set_border_width(GTK_CONTAINER(vbox), 20);
+	gtk_container_set_border_width(GTK_CONTAINER(content_area), 5);
+	gtk_container_add(GTK_CONTAINER(vbox), label_message);
+	gtk_container_add(GTK_CONTAINER(content_area), vbox);
+
+	gtk_widget_show_all(vbox);
+	responce = gtk_dialog_run(GTK_DIALOG(dialog));
 	gtk_widget_destroy(dialog);
+	return responce;
 }
