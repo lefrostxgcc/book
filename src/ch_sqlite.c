@@ -60,9 +60,16 @@ ch_sqlite_exec(
 {
 	int		rc;
 
+	free_last_query_and_error(connection);
+	connection->last_query = strdup(query);
 	rc = sqlite3_exec(connection->db, query, callback, callback_opt_arg, NULL);
+	if (rc != SQLITE_OK)
+	{
+		connection->last_error = strdup(ch_sqlite_errormsg(connection));
+		return CH_SQLITE_FAIL;
+	}
 
-	return rc == SQLITE_OK ? CH_SQLITE_OK : CH_SQLITE_FAIL;
+	return CH_SQLITE_OK;
 }
 
 enum ch_sqlite_status
