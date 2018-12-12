@@ -105,7 +105,7 @@ static GtkWidget *create_subject_list_page(void)
 
 	g_signal_connect(G_OBJECT(button_save_subject), "clicked",
 						G_CALLBACK(on_button_save_subject_clicked),
-						NULL);
+						(gpointer)entry_subject);
 	g_signal_connect(G_OBJECT(tree_view_subject_list), "row-activated",
 						G_CALLBACK(on_tree_view_subject_list_row_activated),
 						(gpointer)entry_subject);
@@ -156,19 +156,20 @@ static void
 on_button_save_subject_clicked(GtkWidget *button, gpointer data)
 {
 	char						result[20];
-	const char					*query;
+	char						*query;
 	struct ch_sqlite_connection *connection;
 
 	do ch_sqlite_open(DATABASE_FILENAME, &connection);
 	while (db_error(connection));
 
-	query = "INSERT INTO subject (id, subject) VALUES (4, 'Английский язык')";
+	query = g_strdup_printf(
+		"UPDATE subject SET subject = '%s' WHERE id = '%d';",
+		gtk_entry_get_text(GTK_ENTRY(data)), selected_subject_id);
 
 	do ch_sqlite_exec(connection, query, NULL, NULL);
 	while (db_error(connection));
 
-	g_snprintf(result, sizeof result, "%d", ch_sqlite_rows_modified(connection));
-	show_message_box(result);
+	g_free(query);
 
 	do ch_sqlite_close(&connection);
 	while (db_error(connection));
