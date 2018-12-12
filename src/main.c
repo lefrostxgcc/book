@@ -15,6 +15,8 @@ static GtkWidget		*create_text_view_subject_list(void);
 static void				show_message_box(const char *message);
 static enum msgbox_responce	show_error_message_box(const char *message);
 static void
+on_button_add_subject_clicked(GtkWidget *button, gpointer data);
+static void
 on_button_save_subject_clicked(GtkWidget *button, gpointer data);
 static int db_error(struct ch_sqlite_connection *connection);
 static void load_subject_table(GtkListStore	*store);
@@ -77,10 +79,12 @@ static GtkWidget *create_subject_list_page(void)
 	GtkWidget	*vbox;
 	GtkWidget	*tree_view_subject_list;
 	GtkWidget	*entry_subject;
+	GtkWidget	*button_add_subject;
 	GtkWidget	*button_save_subject;
 
 	tree_view_subject_list = create_text_view_subject_list();
 	entry_subject = gtk_entry_new();
+	button_add_subject = gtk_button_new_with_label("Добавить");
 	button_save_subject = gtk_button_new_with_label("Сохранить");
 
 	frame_tree_view = gtk_frame_new(NULL);
@@ -97,6 +101,8 @@ static GtkWidget *create_subject_list_page(void)
 	gtk_box_pack_start(GTK_BOX(vbox), gtk_label_new("Название предмета:"),
 		FALSE, FALSE, 0);
 	gtk_box_pack_start(GTK_BOX(vbox), entry_subject, FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(vbox), button_add_subject,
+		FALSE, FALSE, 0);
 	gtk_box_pack_start(GTK_BOX(vbox), button_save_subject,
 		FALSE, FALSE, 0);
 
@@ -107,6 +113,9 @@ static GtkWidget *create_subject_list_page(void)
 	gtk_box_pack_start(GTK_BOX(hbox), frame_tree_view, TRUE, TRUE, 0);
 	gtk_box_pack_start(GTK_BOX(hbox), frame_controls, FALSE, FALSE, 0);
 
+	g_signal_connect(G_OBJECT(button_add_subject), "clicked",
+						G_CALLBACK(on_button_add_subject_clicked),
+						(gpointer)entry_subject);
 	g_signal_connect(G_OBJECT(button_save_subject), "clicked",
 						G_CALLBACK(on_button_save_subject_clicked),
 						(gpointer)entry_subject);
@@ -154,9 +163,44 @@ static GtkWidget *create_text_view_subject_list(void)
 }
 
 static void
-on_button_save_subject_clicked(GtkWidget *button, gpointer data)
+on_button_add_subject_clicked(GtkWidget *button, gpointer data)
 {
 	char						result[20];
+	char						*query;
+	struct ch_sqlite_connection *connection;
+	int							max_subject_id;
+
+	if (gtk_entry_get_text_length(GTK_ENTRY(data)) == 0)
+		return;
+
+	do ch_sqlite_open(DATABASE_FILENAME, &connection);
+	while (db_error(connection));
+
+	query = "SELECT MAX(id) FROM subject";
+
+	do ch_sqlite_scalar(connection, query, result, sizeof result);
+	while (db_error(connection));
+
+	max_subject_id = (int) g_ascii_strtoll(result, NULL, 10);
+
+	query = g_strdup_printf(
+		"INSERT INTO subject (id, subject) VALUES ('%d', '%s')",
+		max_subject_id + 1, gtk_entry_get_text(GTK_ENTRY(data)));
+
+	do ch_sqlite_exec(connection, query, NULL, NULL);
+	while (db_error(connection));
+
+	g_free(query);
+
+	do ch_sqlite_close(&connection);
+	while (db_error(connection));
+
+	load_subject_table(store_subject_list);
+}
+
+static void
+on_button_save_subject_clicked(GtkWidget *button, gpointer data)
+{
 	char						*query;
 	struct ch_sqlite_connection *connection;
 
