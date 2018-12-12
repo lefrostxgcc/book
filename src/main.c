@@ -114,12 +114,16 @@ static GtkWidget *create_text_view_subject_list(void)
 	GtkWidget			*tree_view;
 	GtkTreeViewColumn	*column;
 	GtkCellRenderer		*render;
+	GtkTreeSelection	*selection;
 
 	store_subject_list = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_STRING);
 	load_subject_table(store_subject_list);
 	tree_view = gtk_tree_view_new();
 	gtk_tree_view_set_grid_lines(GTK_TREE_VIEW(tree_view),
 		GTK_TREE_VIEW_GRID_LINES_BOTH);
+	g_object_set(tree_view, "activate-on-single-click", TRUE, NULL);
+	selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree_view));
+	gtk_tree_selection_set_mode(selection, GTK_SELECTION_BROWSE);
 	gtk_tree_view_set_model(GTK_TREE_VIEW(tree_view),
 		GTK_TREE_MODEL(store_subject_list));
 	for (int i = 0; i < sizeof headers / sizeof headers[0]; i++)
