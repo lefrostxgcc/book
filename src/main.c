@@ -6,6 +6,7 @@
 #define		DATABASE_FILENAME	(DATA_PATH "/" DATABASE_NAME)
 
 enum msgbox_responce { RESPONCE_ABORT, RESPONCE_RETRY, RESPONCE_IGNORE };
+enum {WIN_WIDTH = 600, WIN_HEIGHT = 400};
 
 static GtkWidget		*create_main_window(void);
 static GtkWidget		*create_subject_list_page(void);
@@ -43,6 +44,7 @@ static GtkWidget *create_main_window(void)
 
 	win = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_window_set_title(GTK_WINDOW(win), MAIN_WINDOW_TITLE);
+	gtk_window_set_default_size(GTK_WINDOW(win), WIN_WIDTH, WIN_HEIGHT);
 
 	notebook = gtk_notebook_new();
 	gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
