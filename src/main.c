@@ -23,13 +23,15 @@ static void on_tree_view_subject_list_row_activated(GtkTreeView *tree_view,
 static int add_subject_to_store_cb(void *opt_arg, int col_count,
 	char **cols, char **col_names);
 
-static int selected_subject_id;
-
-static GtkWidget	*window;
+static GtkListStore		*store_subject_list;
+static GtkWidget		*window;
+static int				selected_subject_id;
 
 int main(int argc, char *argv[])
 {
 	gtk_init(&argc, &argv);
+
+	store_subject_list = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_STRING);
 
 	window = create_main_window();
 
@@ -38,6 +40,8 @@ int main(int argc, char *argv[])
 
 	gtk_widget_show_all(window);
 	gtk_main();
+
+	g_object_unref(store_subject_list);
 }
 
 static GtkWidget *create_main_window(void)
@@ -121,18 +125,15 @@ static GtkWidget *create_pupil_list_page(void)
 static GtkWidget *create_text_view_subject_list(void)
 {
 	const char			*headers[] = {"ID", "Предмет"};
-	GtkListStore		*store_subject_list;
 	GtkWidget			*tree_view;
 	GtkTreeViewColumn	*column;
 	GtkCellRenderer		*render;
 	GtkTreeSelection	*selection;
 
-	store_subject_list = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_STRING);
 	load_subject_table(store_subject_list);
 	tree_view = gtk_tree_view_new();
 	gtk_tree_view_set_model(GTK_TREE_VIEW(tree_view),
 		GTK_TREE_MODEL(store_subject_list));
-	g_object_unref(store_subject_list);
 	gtk_tree_view_set_grid_lines(GTK_TREE_VIEW(tree_view),
 		GTK_TREE_VIEW_GRID_LINES_BOTH);
 	g_object_set(tree_view, "activate-on-single-click", TRUE, NULL);
@@ -159,6 +160,9 @@ on_button_save_subject_clicked(GtkWidget *button, gpointer data)
 	char						*query;
 	struct ch_sqlite_connection *connection;
 
+	if (selected_subject_id < 0)
+		return;
+
 	do ch_sqlite_open(DATABASE_FILENAME, &connection);
 	while (db_error(connection));
 
@@ -173,6 +177,8 @@ on_button_save_subject_clicked(GtkWidget *button, gpointer data)
 
 	do ch_sqlite_close(&connection);
 	while (db_error(connection));
+
+	load_subject_table(store_subject_list);
 }
 
 static void load_subject_table(GtkListStore	*store)
@@ -190,6 +196,8 @@ static void load_subject_table(GtkListStore	*store)
 
 	do ch_sqlite_close(&connection);
 	while (db_error(connection));
+
+	selected_subject_id = -1;
 }
 
 static int db_error(struct ch_sqlite_connection *connection)
