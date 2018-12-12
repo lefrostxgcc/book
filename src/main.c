@@ -9,6 +9,7 @@ enum msgbox_responce { RESPONCE_ABORT, RESPONCE_RETRY, RESPONCE_IGNORE };
 enum {WIN_WIDTH = 600, WIN_HEIGHT = 400};
 
 static GtkWidget		*create_main_window(void);
+static GtkWidget		*create_login_page(void);
 static GtkWidget		*create_subject_list_page(void);
 static GtkWidget		*create_pupil_list_page(void);
 static GtkWidget		*create_text_view_subject_list(void);
@@ -62,9 +63,11 @@ static GtkWidget *create_main_window(void)
 
 	notebook = gtk_notebook_new();
 	gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
+		create_login_page(),
+		gtk_label_new("Вход в книжку оценок"));
+	gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
 		create_subject_list_page(),
 		gtk_label_new("Список предметов"));
-
 	gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
 		create_pupil_list_page(),
 		gtk_label_new("Список учеников"));
@@ -72,6 +75,11 @@ static GtkWidget *create_main_window(void)
 	gtk_container_add(GTK_CONTAINER(win), notebook);
 
 	return win;
+}
+
+static GtkWidget *create_login_page(void)
+{
+	return gtk_label_new("Вкладка входа в книжку оценок");
 }
 
 static GtkWidget *create_subject_list_page(void)
