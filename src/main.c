@@ -18,8 +18,11 @@ static void
 on_button_add_subject_clicked(GtkWidget *button, gpointer data);
 static void
 on_button_save_subject_clicked(GtkWidget *button, gpointer data);
+static void
+on_button_delete_subject_clicked(GtkWidget *button, gpointer data);
 static int db_error(struct ch_sqlite_connection *connection);
 static void load_subject_table(GtkListStore	*store);
+static int is_selected_subject_list_row(void);
 static void on_tree_view_subject_list_row_activated(GtkTreeView *tree_view,
 	GtkTreePath *path, GtkTreeViewColumn *column, gpointer user_data);
 static int add_subject_to_store_cb(void *opt_arg, int col_count,
@@ -27,6 +30,7 @@ static int add_subject_to_store_cb(void *opt_arg, int col_count,
 
 static GtkListStore		*store_subject_list;
 static GtkWidget		*window;
+static GtkWidget		*tree_view_subject_list;
 static int				selected_subject_id;
 
 int main(int argc, char *argv[])
@@ -77,15 +81,16 @@ static GtkWidget *create_subject_list_page(void)
 	GtkWidget	*frame_controls;
 	GtkWidget	*hbox;
 	GtkWidget	*vbox;
-	GtkWidget	*tree_view_subject_list;
 	GtkWidget	*entry_subject;
 	GtkWidget	*button_add_subject;
 	GtkWidget	*button_save_subject;
+	GtkWidget	*button_delete_subject;
 
 	tree_view_subject_list = create_text_view_subject_list();
 	entry_subject = gtk_entry_new();
 	button_add_subject = gtk_button_new_with_label("Добавить");
 	button_save_subject = gtk_button_new_with_label("Сохранить");
+	button_delete_subject = gtk_button_new_with_label("Удалить");
 
 	frame_tree_view = gtk_frame_new(NULL);
 	frame_controls = gtk_frame_new(NULL);
@@ -105,6 +110,8 @@ static GtkWidget *create_subject_list_page(void)
 		FALSE, FALSE, 0);
 	gtk_box_pack_start(GTK_BOX(vbox), button_save_subject,
 		FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(vbox), button_delete_subject,
+		FALSE, FALSE, 0);
 
 	gtk_container_add(GTK_CONTAINER(frame_tree_view),
 		tree_view_subject_list);
@@ -118,6 +125,9 @@ static GtkWidget *create_subject_list_page(void)
 						(gpointer)entry_subject);
 	g_signal_connect(G_OBJECT(button_save_subject), "clicked",
 						G_CALLBACK(on_button_save_subject_clicked),
+						(gpointer)entry_subject);
+	g_signal_connect(G_OBJECT(button_delete_subject), "clicked",
+						G_CALLBACK(on_button_delete_subject_clicked),
 						(gpointer)entry_subject);
 	g_signal_connect(G_OBJECT(tree_view_subject_list), "row-activated",
 						G_CALLBACK(on_tree_view_subject_list_row_activated),
@@ -204,6 +214,9 @@ on_button_save_subject_clicked(GtkWidget *button, gpointer data)
 	char						*query;
 	struct ch_sqlite_connection *connection;
 
+	if (!is_selected_subject_list_row())
+		return;
+
 	if (selected_subject_id < 0)
 		return;
 
@@ -211,8 +224,37 @@ on_button_save_subject_clicked(GtkWidget *button, gpointer data)
 	while (db_error(connection));
 
 	query = g_strdup_printf(
-		"UPDATE subject SET subject = '%s' WHERE id = '%d';",
+		"UPDATE subject SET subject = '%s' WHERE id = '%d'",
 		gtk_entry_get_text(GTK_ENTRY(data)), selected_subject_id);
+
+	do ch_sqlite_exec(connection, query, NULL, NULL);
+	while (db_error(connection));
+
+	g_free(query);
+
+	do ch_sqlite_close(&connection);
+	while (db_error(connection));
+
+	load_subject_table(store_subject_list);
+}
+
+static void
+on_button_delete_subject_clicked(GtkWidget *button, gpointer data)
+{
+	char						*query;
+	struct ch_sqlite_connection *connection;
+
+	if (!is_selected_subject_list_row())
+		return;
+
+	if (selected_subject_id < 0)
+		return;
+
+	do ch_sqlite_open(DATABASE_FILENAME, &connection);
+	while (db_error(connection));
+
+	query = g_strdup_printf(
+		"DELETE FROM subject WHERE id = %d", selected_subject_id);
 
 	do ch_sqlite_exec(connection, query, NULL, NULL);
 	while (db_error(connection));
@@ -323,6 +365,15 @@ static void on_tree_view_subject_list_row_activated(GtkTreeView *tree_view,
 
 	selected_subject_id = (int) g_ascii_strtoll(id, NULL, 10);
 	gtk_entry_set_text(GTK_ENTRY(user_data), subject);
+}
+
+static int is_selected_subject_list_row(void)
+{
+	GtkTreeSelection	*selection;
+
+	selection = gtk_tree_view_get_selection(
+		GTK_TREE_VIEW(tree_view_subject_list));
+	return gtk_tree_selection_get_selected(selection, NULL, NULL);
 }
 
 static int add_subject_to_store_cb(void *store, int col_count,
