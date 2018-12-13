@@ -49,13 +49,15 @@ static GtkWidget		*tree_view_subject_list;
 static GtkWidget		*combo_box_pupil;
 static char				*teacher_login;
 static int				selected_subject_id;
+static int				current_subject_n;
 
 int main(int argc, char *argv[])
 {
 	gtk_init(&argc, &argv);
 
 	store_pupil = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_STRING);
-	store_subject_list = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_STRING);
+	store_subject_list = gtk_list_store_new(3, G_TYPE_STRING, G_TYPE_STRING,
+		G_TYPE_STRING);
 
 	load_pupil_store(store_pupil);
 	load_teacher_login();
@@ -240,7 +242,7 @@ static GtkWidget *create_pupil_list_page(void)
 
 static GtkWidget *create_text_view_subject_list(void)
 {
-	const char			*headers[] = {"ID", "Предмет"};
+	const char			*headers[] = {"ID", "№", "Предмет"};
 	GtkWidget			*tree_view;
 	GtkTreeViewColumn	*column;
 	GtkCellRenderer		*render;
@@ -256,7 +258,7 @@ static GtkWidget *create_text_view_subject_list(void)
 	selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree_view));
 	gtk_tree_selection_set_mode(selection, GTK_SELECTION_BROWSE);
 
-	for (int i = 0; i < sizeof headers / sizeof headers[0]; i++)
+	for (int i = 1; i < sizeof headers / sizeof headers[0]; i++)
 	{
 		render = gtk_cell_renderer_text_new();
 		column = gtk_tree_view_column_new_with_attributes(headers[i],
@@ -400,6 +402,7 @@ static void load_subject_table(GtkListStore	*store)
 	while (db_error(connection));
 
 	gtk_list_store_clear(store);
+	current_subject_n = 0;
 	query = "SELECT id, subject FROM subject ORDER BY subject";
 	do ch_sqlite_exec(connection, query, add_subject_to_store_cb, store);
 	while (db_error(connection));
@@ -609,10 +612,16 @@ static int add_subject_to_store_cb(void *store, int col_count,
 	char **cols, char **col_names)
 {
 	GtkTreeIter		iter;
+	char			*n_str;
+
+	current_subject_n++;
+	n_str = g_strdup_printf("%d", current_subject_n);	
 
 	gtk_list_store_append(GTK_LIST_STORE(store), &iter);
 	gtk_list_store_set(GTK_LIST_STORE(store), &iter, 0, cols[0],
-		1, cols[1], -1);
+		1, n_str, 2, cols[1], -1);
+
+	g_free(n_str);
 }
 
 static int add_pupil_to_store_cb(void *store, int col_count,
