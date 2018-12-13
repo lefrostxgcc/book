@@ -22,13 +22,16 @@ on_button_save_subject_clicked(GtkWidget *button, gpointer data);
 static void
 on_button_delete_subject_clicked(GtkWidget *button, gpointer data);
 static void on_button_pupil_login_clicked(GtkWidget *button, gpointer data);
+static void on_button_teacher_login_clicked(GtkWidget *button, gpointer data);
 static int db_error(struct ch_sqlite_connection *connection);
 static void load_subject_table(GtkListStore	*store);
 static void load_pupil_store(GtkListStore *store);
 static void load_teacher_login(void);
 static void login_pupil(int id);
+static void login_teacher(void);
 static gboolean check_pupil_login(int id, const gchar *password);
 static int is_selected_subject_list_row(void);
+static gboolean check_teacher_login(int id, const gchar *password);
 static void on_tree_view_subject_list_row_activated(GtkTreeView *tree_view,
 	GtkTreePath *path, GtkTreeViewColumn *column, gpointer user_data);
 static int add_subject_to_store_cb(void *opt_arg, int col_count,
@@ -153,6 +156,9 @@ static GtkWidget *create_login_page(void)
 	g_signal_connect(G_OBJECT(button_pupil_login), "clicked",
 						G_CALLBACK(on_button_pupil_login_clicked),
 						(gpointer)entry_pupil_password);
+	g_signal_connect(G_OBJECT(button_teacher_login), "clicked",
+						G_CALLBACK(on_button_teacher_login_clicked),
+						(gpointer)entry_teacher_password);
 
 	return grid_login;
 }
@@ -369,6 +375,14 @@ static void on_button_pupil_login_clicked(GtkWidget *button, gpointer data)
 		show_message_box("Неверный логин или пароль пользователя");
 }
 
+static void on_button_teacher_login_clicked(GtkWidget *button, gpointer data)
+{
+	if (check_teacher_login(1, gtk_entry_get_text(GTK_ENTRY(data))))
+		login_teacher();
+	else
+		show_message_box("Неверный логин или пароль пользователя");
+}
+
 static void load_subject_table(GtkListStore	*store)
 {
 	struct ch_sqlite_connection *connection;
@@ -452,9 +466,41 @@ static gboolean check_pupil_login(int id, const gchar *password)
 	return match_count != 0;
 }
 
+static gboolean check_teacher_login(int id, const gchar *password)
+{
+	char						result[20];
+	struct ch_sqlite_connection *connection;
+	char						*query;
+	int							match_count;
+
+	do ch_sqlite_open(DATABASE_FILENAME, &connection);
+	while (db_error(connection));
+
+	query = g_strdup_printf(
+		"SELECT COUNT(*) FROM teacher WHERE id = '%d' AND password = '%s';",
+		id, password);
+
+	do ch_sqlite_scalar(connection, query, result, sizeof result);
+	while (db_error(connection));
+
+	g_free(query);
+
+	match_count = (int) g_ascii_strtoll(result, NULL, 10);
+
+	do ch_sqlite_close(&connection);
+	while (db_error(connection));
+
+	return match_count != 0;
+}
+
 static void login_pupil(int id)
 {
 	gtk_notebook_set_current_page(GTK_NOTEBOOK(notebook), 2);
+}
+
+static void login_teacher(void)
+{
+	gtk_notebook_set_current_page(GTK_NOTEBOOK(notebook), 1);
 }
 
 static int db_error(struct ch_sqlite_connection *connection)
