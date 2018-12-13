@@ -99,16 +99,27 @@ static GtkWidget *create_login_page(void)
 	GtkWidget		*label_pupil;
 	GtkWidget		*label_teacher;
 	GtkWidget		*entry_pupil_password;
+	GtkWidget		*entry_teacher_login;
+	GtkWidget		*entry_teacher_password;
 	GtkWidget		*button_pupil_login;
+	GtkWidget		*button_teacher_login;
 	GtkCellRenderer	*render;
 
 	label_space = gtk_label_new(NULL);
 	label_pupil = gtk_label_new("Ученик");
 	label_teacher = gtk_label_new("Учитель");
 	entry_pupil_password = gtk_entry_new();
+	entry_teacher_login = gtk_entry_new();
+	entry_teacher_password = gtk_entry_new();
 	button_pupil_login = gtk_button_new_with_label("Вход");
+	button_teacher_login = gtk_button_new_with_label("Вход");
+
+	gtk_entry_set_text(GTK_ENTRY(entry_teacher_login), teacher_login);
+	gtk_entry_set_alignment(GTK_ENTRY(entry_teacher_login), 0.5);
+	gtk_widget_set_sensitive(entry_teacher_login, FALSE);
 
 	gtk_entry_set_visibility(GTK_ENTRY(entry_pupil_password), FALSE);
+	gtk_entry_set_visibility(GTK_ENTRY(entry_teacher_password), FALSE);
 
 	combo_box_pupil = gtk_combo_box_new_with_model(GTK_TREE_MODEL(store_pupil));
 
@@ -135,6 +146,9 @@ static GtkWidget *create_login_page(void)
 	gtk_grid_attach(GTK_GRID(grid_login), button_pupil_login, 2, 0, 1, 2);
 	gtk_grid_attach(GTK_GRID(grid_login), label_space, 0, 2, 3, 1);
 	gtk_grid_attach(GTK_GRID(grid_login), label_teacher, 0, 3, 1, 1);
+	gtk_grid_attach(GTK_GRID(grid_login), entry_teacher_login, 1, 3, 1, 1);
+	gtk_grid_attach(GTK_GRID(grid_login), entry_teacher_password, 1, 4, 1, 1);
+	gtk_grid_attach(GTK_GRID(grid_login), button_teacher_login, 2, 3, 1, 2);
 
 	g_signal_connect(G_OBJECT(button_pupil_login), "clicked",
 						G_CALLBACK(on_button_pupil_login_clicked),
