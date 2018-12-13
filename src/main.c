@@ -12,6 +12,8 @@ static GtkWidget		*create_main_window(void);
 static GtkWidget		*create_login_page(void);
 static GtkWidget		*create_subject_list_page(void);
 static GtkWidget		*create_pupil_list_page(void);
+static GtkWidget		*create_pupil_point_page(void);
+static GtkWidget		*create_class_point_page(void);
 static GtkWidget		*create_text_view_subject_list(void);
 static void				show_message_box(const char *message);
 static enum msgbox_responce	show_error_message_box(const char *message);
@@ -45,6 +47,8 @@ static GtkWidget		*window;
 static GtkWidget		*notebook;
 static GtkWidget		*page_subject_list;
 static GtkWidget		*page_pupil_list;
+static GtkWidget		*page_pupil_point;
+static GtkWidget		*page_class_point;
 static GtkWidget		*tree_view_subject_list;
 static GtkWidget		*combo_box_pupil;
 static char				*teacher_login;
@@ -70,6 +74,8 @@ int main(int argc, char *argv[])
 	gtk_widget_show_all(window);
 	gtk_widget_hide(page_subject_list);
 	gtk_widget_hide(page_pupil_list);
+	gtk_widget_hide(page_pupil_point);
+	gtk_widget_hide(page_class_point);
 
 	gtk_main();
 
@@ -88,6 +94,8 @@ static GtkWidget *create_main_window(void)
 
 	page_subject_list = create_subject_list_page();
 	page_pupil_list = create_pupil_list_page();
+	page_pupil_point = create_pupil_point_page();
+	page_class_point = create_class_point_page();
 
 	notebook = gtk_notebook_new();
 	gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
@@ -99,6 +107,12 @@ static GtkWidget *create_main_window(void)
 	gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
 		page_pupil_list,
 		gtk_label_new("Список учеников"));
+	gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
+		page_pupil_point,
+		gtk_label_new("Оценки ученика"));
+	gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
+		page_class_point,
+		gtk_label_new("Оценки класса"));
 
 	gtk_container_add(GTK_CONTAINER(win), notebook);
 
@@ -238,6 +252,16 @@ static GtkWidget *create_subject_list_page(void)
 static GtkWidget *create_pupil_list_page(void)
 {
 	return gtk_label_new("Вкладка с учениками");
+}
+
+static GtkWidget *create_pupil_point_page(void)
+{
+	return gtk_label_new("Оценки ученика");
+}
+
+static GtkWidget *create_class_point_page(void)
+{
+	return gtk_label_new("Оценки класса");
 }
 
 static GtkWidget *create_text_view_subject_list(void)
@@ -508,13 +532,17 @@ static void login_pupil(int id)
 {
 	gtk_widget_hide(page_subject_list);
 	gtk_widget_hide(page_pupil_list);
-	show_message_box("Вход выполнен успешно!");
+	gtk_widget_hide(page_class_point);
+	gtk_widget_show_all(page_pupil_point);
+	gtk_notebook_set_current_page(GTK_NOTEBOOK(notebook), 3);
 }
 
 static void login_teacher(void)
 {
 	gtk_widget_show_all(page_subject_list);
 	gtk_widget_show_all(page_pupil_list);
+	gtk_widget_show_all(page_class_point);
+	gtk_widget_hide(page_pupil_point);
 	gtk_notebook_set_current_page(GTK_NOTEBOOK(notebook), 1);
 }
 
