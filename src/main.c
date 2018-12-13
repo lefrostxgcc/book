@@ -25,6 +25,7 @@ static void on_button_pupil_login_clicked(GtkWidget *button, gpointer data);
 static int db_error(struct ch_sqlite_connection *connection);
 static void load_subject_table(GtkListStore	*store);
 static void load_pupil_store(GtkListStore *store);
+static void load_teacher_login(void);
 static void login_pupil(int id);
 static gboolean check_pupil_login(int id, const gchar *password);
 static int is_selected_subject_list_row(void);
@@ -41,6 +42,7 @@ static GtkWidget		*window;
 static GtkWidget		*notebook;
 static GtkWidget		*tree_view_subject_list;
 static GtkWidget		*combo_box_pupil;
+static char				*teacher_login;
 static int				selected_subject_id;
 
 int main(int argc, char *argv[])
@@ -51,6 +53,7 @@ int main(int argc, char *argv[])
 	store_subject_list = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_STRING);
 
 	load_pupil_store(store_pupil);
+	load_teacher_login();
 
 	window = create_main_window();
 
@@ -60,6 +63,7 @@ int main(int argc, char *argv[])
 	gtk_widget_show_all(window);
 	gtk_main();
 
+	g_free(teacher_login);
 	g_object_unref(store_pupil);
 	g_object_unref(store_subject_list);
 }
@@ -382,6 +386,26 @@ static void load_pupil_store(GtkListStore *store)
 	query = "SELECT id, pupil FROM pupil ORDER BY pupil";
 	do ch_sqlite_exec(connection, query, add_pupil_to_store_cb, store);
 	while (db_error(connection));
+
+	do ch_sqlite_close(&connection);
+	while (db_error(connection));
+}
+
+static void load_teacher_login(void)
+{
+	char						result[20];
+	struct ch_sqlite_connection *connection;
+	const char					*query;
+
+	do ch_sqlite_open(DATABASE_FILENAME, &connection);
+	while (db_error(connection));
+
+	query = "SELECT teacher FROM teacher WHERE id = 1";
+	do ch_sqlite_scalar(connection, query, result, sizeof result);
+	while (db_error(connection));
+
+	g_free(teacher_login);
+	teacher_login = g_strdup(result);
 
 	do ch_sqlite_close(&connection);
 	while (db_error(connection));
