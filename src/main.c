@@ -495,7 +495,7 @@ static gboolean check_teacher_login(int id, const gchar *password)
 
 static void login_pupil(int id)
 {
-	gtk_notebook_set_current_page(GTK_NOTEBOOK(notebook), 2);
+	show_message_box("Вход выполнен успешно!");
 }
 
 static void login_teacher(void)
