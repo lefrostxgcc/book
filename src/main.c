@@ -43,6 +43,8 @@ static GtkListStore		*store_subject_list;
 static GtkListStore		*store_pupil;
 static GtkWidget		*window;
 static GtkWidget		*notebook;
+static GtkWidget		*page_subject_list;
+static GtkWidget		*page_pupil_list;
 static GtkWidget		*tree_view_subject_list;
 static GtkWidget		*combo_box_pupil;
 static char				*teacher_login;
@@ -64,6 +66,9 @@ int main(int argc, char *argv[])
 		G_CALLBACK(gtk_main_quit), NULL);
 
 	gtk_widget_show_all(window);
+	gtk_widget_hide(page_subject_list);
+	gtk_widget_hide(page_pupil_list);
+
 	gtk_main();
 
 	g_free(teacher_login);
@@ -79,15 +84,18 @@ static GtkWidget *create_main_window(void)
 	gtk_window_set_title(GTK_WINDOW(win), MAIN_WINDOW_TITLE);
 	gtk_window_set_default_size(GTK_WINDOW(win), WIN_WIDTH, WIN_HEIGHT);
 
+	page_subject_list = create_subject_list_page();
+	page_pupil_list = create_pupil_list_page();
+
 	notebook = gtk_notebook_new();
 	gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
 		create_login_page(),
 		gtk_label_new("Вход в книжку оценок"));
 	gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
-		create_subject_list_page(),
+		page_subject_list,
 		gtk_label_new("Список предметов"));
 	gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
-		create_pupil_list_page(),
+		page_pupil_list,
 		gtk_label_new("Список учеников"));
 
 	gtk_container_add(GTK_CONTAINER(win), notebook);
@@ -450,7 +458,7 @@ static gboolean check_pupil_login(int id, const gchar *password)
 	while (db_error(connection));
 
 	query = g_strdup_printf(
-		"SELECT COUNT(*) FROM pupil WHERE id = '%d' AND password = '%s';",
+		"SELECT COUNT(*) FROM pupil WHERE id = '%d' AND password = '%s'",
 		id, password);
 
 	do ch_sqlite_scalar(connection, query, result, sizeof result);
@@ -477,7 +485,7 @@ static gboolean check_teacher_login(int id, const gchar *password)
 	while (db_error(connection));
 
 	query = g_strdup_printf(
-		"SELECT COUNT(*) FROM teacher WHERE id = '%d' AND password = '%s';",
+		"SELECT COUNT(*) FROM teacher WHERE id = '%d' AND password = '%s'",
 		id, password);
 
 	do ch_sqlite_scalar(connection, query, result, sizeof result);
@@ -495,11 +503,15 @@ static gboolean check_teacher_login(int id, const gchar *password)
 
 static void login_pupil(int id)
 {
+	gtk_widget_hide(page_subject_list);
+	gtk_widget_hide(page_pupil_list);
 	show_message_box("Вход выполнен успешно!");
 }
 
 static void login_teacher(void)
 {
+	gtk_widget_show_all(page_subject_list);
+	gtk_widget_show_all(page_pupil_list);
 	gtk_notebook_set_current_page(GTK_NOTEBOOK(notebook), 1);
 }
 
