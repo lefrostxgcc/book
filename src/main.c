@@ -44,6 +44,10 @@ static int add_pupil_to_store_cb(void *store, int col_count,
 	char **cols, char **col_names);
 static int add_subject_to_pupil_point_store_cb(void *opt_arg, int col_count,
 	char **cols, char **col_names);
+static int add_point_to_pupil_point_store_cb(void *opt_arg, int col_count,
+	char **cols, char **col_names);
+static gboolean walk_pupil_points(GtkTreeModel *model, GtkTreePath *path,
+	GtkTreeIter *iter, gpointer data);
 
 static GtkListStore		*store_subject_list;
 static GtkListStore		*store_pupil;
@@ -57,6 +61,8 @@ static GtkWidget		*page_class_point;
 static GtkWidget		*tree_view_subject_list;
 static GtkWidget		*combo_box_pupil;
 static char				*teacher_login;
+static char				*curr_point_subject_id;
+static char				*curr_point_day;
 static int				selected_subject_id;
 static int				current_subject_n;
 static int				pupil_points_max_day;
@@ -517,6 +523,15 @@ static void load_pupil_points_store(GtkListStore *store, int id)
 
 	g_free(query);
 
+	query = g_strdup_printf(
+		"SELECT subject_id, day, point FROM point WHERE pupil_id = '%d'", id);
+
+	do ch_sqlite_exec(connection, query, add_point_to_pupil_point_store_cb,
+						store);
+	while (db_error(connection));
+
+	g_free(query);
+
 	do ch_sqlite_close(&connection);
 	while (db_error(connection));
 	g_slice_free1(column_count * sizeof(GType), types);
@@ -805,4 +820,32 @@ static int add_subject_to_pupil_point_store_cb(void *opt_arg, int col_count,
 		1, cols[1], -1);
 
 	return 0;
+}
+
+static int add_point_to_pupil_point_store_cb(void *opt_arg, int col_count,
+	char **cols, char **col_names)
+{
+	curr_point_subject_id = cols[0];
+	curr_point_day = cols[1];
+
+	gtk_tree_model_foreach(GTK_TREE_MODEL(store_pupil_points),
+                     		walk_pupil_points, cols[2]);
+
+	return 0;
+}
+
+static gboolean walk_pupil_points(GtkTreeModel *model, GtkTreePath *path,
+	GtkTreeIter *iter, gpointer data)
+{
+	gchar		*subject_id;
+
+	gtk_tree_model_get(GTK_TREE_MODEL(model), iter, 0, &subject_id, -1);
+	if (g_strcmp0(subject_id, curr_point_subject_id) == 0)
+	{
+		gtk_list_store_set(store_pupil_points, iter,
+			g_ascii_strtoll(curr_point_day, NULL, 10) + 1, data, -1);
+		return TRUE;
+	}
+
+	return FALSE;
 }
