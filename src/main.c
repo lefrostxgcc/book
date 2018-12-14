@@ -59,6 +59,7 @@ static GtkWidget		*combo_box_pupil;
 static char				*teacher_login;
 static int				selected_subject_id;
 static int				current_subject_n;
+static int				pupil_points_max_day;
 
 int main(int argc, char *argv[])
 {
@@ -77,16 +78,16 @@ int main(int argc, char *argv[])
 		G_CALLBACK(gtk_main_quit), NULL);
 
 	gtk_widget_show_all(window);
-	gtk_widget_hide(page_subject_list);
-	gtk_widget_hide(page_pupil_list);
-	gtk_widget_hide(page_pupil_point);
-	gtk_widget_hide(page_class_point);
 
 	gtk_main();
 
 	g_free(teacher_login);
-	g_object_unref(store_pupil);
-	g_object_unref(store_subject_list);
+	if (store_pupil)
+		g_object_unref(store_pupil);
+	if (store_subject_list)
+		g_object_unref(store_subject_list);
+	if (store_pupil_points)
+		g_object_unref(store_pupil_points);
 }
 
 static GtkWidget *create_main_window(void)
@@ -97,28 +98,11 @@ static GtkWidget *create_main_window(void)
 	gtk_window_set_title(GTK_WINDOW(win), MAIN_WINDOW_TITLE);
 	gtk_window_set_default_size(GTK_WINDOW(win), WIN_WIDTH, WIN_HEIGHT);
 
-	page_subject_list = create_subject_list_page();
-	page_pupil_list = create_pupil_list_page();
-	page_pupil_point = create_pupil_point_page();
-	page_class_point = create_class_point_page();
-
 	notebook = gtk_notebook_new();
 	gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
 		create_login_page(),
 		gtk_label_new("Вход в книжку оценок"));
-	gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
-		page_subject_list,
-		gtk_label_new("Список предметов"));
-	gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
-		page_pupil_list,
-		gtk_label_new("Список учеников"));
-	gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
-		page_pupil_point,
-		gtk_label_new("Оценки ученика"));
-	gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
-		page_class_point,
-		gtk_label_new("Оценки класса"));
-
+	
 	gtk_container_add(GTK_CONTAINER(win), notebook);
 
 	return win;
@@ -261,7 +245,51 @@ static GtkWidget *create_pupil_list_page(void)
 
 static GtkWidget *create_pupil_point_page(void)
 {
-	return gtk_label_new("Оценки ученика");
+	GtkWidget			*frame_pupil_points;
+	GtkWidget			*vbox;
+	GtkWidget			*tree_view_pupil_points;
+	GtkTreeViewColumn	*column;
+	GtkCellRenderer		*render;
+	gchar				*log_str;
+	gchar				**headers;
+	int					column_count;
+	int					i;
+
+	vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+	frame_pupil_points = gtk_frame_new(NULL);
+	tree_view_pupil_points = gtk_tree_view_new();
+
+	gtk_tree_view_set_model(GTK_TREE_VIEW(tree_view_pupil_points),
+		GTK_TREE_MODEL(store_pupil_points));
+
+	gtk_tree_view_set_grid_lines(GTK_TREE_VIEW(tree_view_pupil_points),
+		GTK_TREE_VIEW_GRID_LINES_BOTH);
+
+	column_count = pupil_points_max_day + 1;
+	headers = g_slice_alloc(column_count * sizeof(gchar *));
+	headers[0] = "Предмет";
+	for (i = 1; i < column_count; i++)
+		headers[i] = g_strdup_printf("%d", i);
+
+	for (i = 0; i < column_count; i++)
+	{
+		render = gtk_cell_renderer_text_new();
+		column = gtk_tree_view_column_new_with_attributes(headers[i],
+			render, "text", i+1, NULL);
+		gtk_tree_view_column_set_min_width(column, 20);
+		gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view_pupil_points),
+			column);
+	}
+
+	gtk_container_add(GTK_CONTAINER(frame_pupil_points), tree_view_pupil_points);
+	gtk_box_pack_start(GTK_BOX(vbox), frame_pupil_points, TRUE, TRUE, 0);
+
+	for (i = 1; i < column_count; i++)
+		g_free(headers[i]);
+
+	g_slice_free1(column_count * sizeof(gchar *), headers);
+
+	return vbox;
 }
 
 static GtkWidget *create_class_point_page(void)
@@ -467,10 +495,13 @@ static void load_pupil_points_store(GtkListStore *store, int id)
 	int							i;
 	int							column_count;
 
-	column_count = get_pupil_points_max_day(id) + 2;
+	pupil_points_max_day = get_pupil_points_max_day(id);
+	column_count = pupil_points_max_day + 2;
 	types = g_slice_alloc(column_count * sizeof(GType));
 	for (i = 0; i < column_count; i++)
 		types[i] = G_TYPE_STRING;
+	if (store_pupil_points)
+		g_object_unref(store_pupil_points);
 	store_pupil_points = gtk_list_store_newv(column_count, types);
 
 	do ch_sqlite_open(DATABASE_FILENAME, &connection);
@@ -592,19 +623,59 @@ static gboolean check_teacher_login(int id, const gchar *password)
 static void login_pupil(int id)
 {
 	load_pupil_points_store(store_pupil_points, id);
-	gtk_widget_hide(page_subject_list);
-	gtk_widget_hide(page_pupil_list);
-	gtk_widget_hide(page_class_point);
-	gtk_widget_show_all(page_pupil_point);
-	gtk_notebook_set_current_page(GTK_NOTEBOOK(notebook), 3);
+
+	if (page_subject_list)
+		gtk_notebook_detach_tab(GTK_NOTEBOOK(notebook), page_subject_list);
+	if (page_pupil_list)
+		gtk_notebook_detach_tab(GTK_NOTEBOOK(notebook), page_pupil_list);
+	if (page_class_point)	
+		gtk_notebook_detach_tab(GTK_NOTEBOOK(notebook), page_class_point);
+	if (page_pupil_point)
+		gtk_notebook_detach_tab(GTK_NOTEBOOK(notebook), page_pupil_point);
+
+	page_subject_list = NULL;
+	page_pupil_list = NULL;
+	page_class_point = NULL;
+
+	page_pupil_point = create_pupil_point_page();
+
+	gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
+		page_pupil_point,
+		gtk_label_new("Оценки ученика"));
+
+
+	gtk_widget_show_all(notebook);
+	gtk_notebook_set_current_page(GTK_NOTEBOOK(notebook), 1);
 }
 
 static void login_teacher(void)
 {
-	gtk_widget_show_all(page_subject_list);
-	gtk_widget_show_all(page_pupil_list);
-	gtk_widget_show_all(page_class_point);
-	gtk_widget_hide(page_pupil_point);
+	if (page_subject_list)
+		gtk_notebook_detach_tab(GTK_NOTEBOOK(notebook), page_subject_list);
+	if (page_pupil_list)
+		gtk_notebook_detach_tab(GTK_NOTEBOOK(notebook), page_pupil_list);
+	if (page_class_point)	
+		gtk_notebook_detach_tab(GTK_NOTEBOOK(notebook), page_class_point);
+	if (page_pupil_point)
+		gtk_notebook_detach_tab(GTK_NOTEBOOK(notebook), page_pupil_point);
+
+	page_pupil_point = NULL;
+
+	page_subject_list = create_subject_list_page();
+	page_pupil_list = create_pupil_list_page();
+	page_class_point = create_class_point_page();
+
+	gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
+		page_subject_list,
+		gtk_label_new("Список предметов"));
+	gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
+		page_pupil_list,
+		gtk_label_new("Список учеников"));
+	gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
+		page_class_point,
+		gtk_label_new("Оценки класса"));
+
+	gtk_widget_show_all(notebook);
 	gtk_notebook_set_current_page(GTK_NOTEBOOK(notebook), 1);
 }
 
