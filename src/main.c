@@ -28,9 +28,11 @@ static void on_button_teacher_login_clicked(GtkWidget *button, gpointer data);
 static int db_error(struct ch_sqlite_connection *connection);
 static void load_subject_table(GtkListStore	*store);
 static void load_pupil_store(GtkListStore *store);
+static void load_pupil_points_store(GtkListStore *store, int id);
 static void load_teacher_login(void);
 static void login_pupil(int id);
 static void login_teacher(void);
+static int get_pupil_points_max_day(int id);
 static gboolean check_pupil_login(int id, const gchar *password);
 static int is_selected_subject_list_row(void);
 static gboolean check_teacher_login(int id, const gchar *password);
@@ -40,9 +42,12 @@ static int add_subject_to_store_cb(void *opt_arg, int col_count,
 	char **cols, char **col_names);
 static int add_pupil_to_store_cb(void *store, int col_count,
 	char **cols, char **col_names);
+static int add_subject_to_pupil_point_store_cb(void *opt_arg, int col_count,
+	char **cols, char **col_names);
 
 static GtkListStore		*store_subject_list;
 static GtkListStore		*store_pupil;
+static GtkListStore		*store_pupil_points;
 static GtkWidget		*window;
 static GtkWidget		*notebook;
 static GtkWidget		*page_subject_list;
@@ -454,6 +459,62 @@ static void load_pupil_store(GtkListStore *store)
 	while (db_error(connection));
 }
 
+static void load_pupil_points_store(GtkListStore *store, int id)
+{
+	struct ch_sqlite_connection *connection;
+	char						*query;
+	GType						*types;
+	int							i;
+	int							column_count;
+
+	column_count = get_pupil_points_max_day(id) + 2;
+	types = g_slice_alloc(column_count * sizeof(GType));
+	for (i = 0; i < column_count; i++)
+		types[i] = G_TYPE_STRING;
+	store_pupil_points = gtk_list_store_newv(column_count, types);
+
+	do ch_sqlite_open(DATABASE_FILENAME, &connection);
+	while (db_error(connection));
+
+	query = g_strdup_printf(
+		"SELECT DISTINCT subject_id, subject FROM point, subject "
+		"WHERE pupil_id = '%d' AND point.subject_id = subject.id;", id);
+
+	do ch_sqlite_exec(connection, query, add_subject_to_pupil_point_store_cb,
+						store);
+	while (db_error(connection));
+
+	g_free(query);
+
+	do ch_sqlite_close(&connection);
+	while (db_error(connection));
+	g_slice_free1(column_count * sizeof(GType), types);
+}
+
+static int get_pupil_points_max_day(int id)
+{
+	char						result[20];
+	struct ch_sqlite_connection *connection;
+	char						*query;
+	int							match_count;
+
+	do ch_sqlite_open(DATABASE_FILENAME, &connection);
+	while (db_error(connection));
+
+	query = g_strdup_printf("SELECT MAX(day) FROM point WHERE pupil_id = '%d'",
+							id);
+
+	do ch_sqlite_scalar(connection, query, result, sizeof result);
+	while (db_error(connection));
+
+	g_free(query);
+
+	do ch_sqlite_close(&connection);
+	while (db_error(connection));
+
+	return (int) g_ascii_strtoll(result, NULL, 10);
+}
+
 static void load_teacher_login(void)
 {
 	char						result[20];
@@ -530,6 +591,7 @@ static gboolean check_teacher_login(int id, const gchar *password)
 
 static void login_pupil(int id)
 {
+	load_pupil_points_store(store_pupil_points, id);
 	gtk_widget_hide(page_subject_list);
 	gtk_widget_hide(page_pupil_list);
 	gtk_widget_hide(page_class_point);
@@ -660,4 +722,16 @@ static int add_pupil_to_store_cb(void *store, int col_count,
 	gtk_list_store_append(GTK_LIST_STORE(store), &iter);
 	gtk_list_store_set(GTK_LIST_STORE(store), &iter, 0, cols[0],
 		1, cols[1], -1);
+}
+
+static int add_subject_to_pupil_point_store_cb(void *opt_arg, int col_count,
+	char **cols, char **col_names)
+{
+	GtkTreeIter		iter;
+
+	gtk_list_store_append(store_pupil_points, &iter);
+	gtk_list_store_set(store_pupil_points, &iter, 0, cols[0],
+		1, cols[1], -1);
+
+	return 0;
 }
